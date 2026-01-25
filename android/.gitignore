@@ -1,0 +1,50 @@
+gradle-wrapper.jar
+/.gradle
+/captures/
+/gradlew
+/gradlew.bat
+/local.properties
+GeneratedPluginRegistrant.java
+.cxx/
+
+# Remember to never publicly share your keystore.
+# See https://flutter.dev/to/reference-keystore
+key.properties
+**/*.keystore
+**/*.jks
+
+
+# ======================
+# Flutter (general)
+# ======================
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# ======================
+# Python / FastAPI
+# ======================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.venv/
+env/
+venv/
+
+# ======================
+# ML / Data
+# ======================
+~$*.xlsx
+
+# If your friend will TRAIN model again → keep ignored
+# If your friend will USE model directly → comment this line
+# backend/model/*.pkl
+
+# ======================
+# OS
+# ======================
+.DS_Store
+Thumbs.db
