@@ -22,7 +22,7 @@ class CropApp extends StatelessWidget {
   }
 }
 
-/// ================= SPLASH / AUTO LOGIN =================
+/// ================= SPLASH =================
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
@@ -39,7 +39,6 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   void checkLogin() async {
-
     final loggedIn = await api.isLoggedIn();
 
     if(!mounted) return;
@@ -60,19 +59,19 @@ class _SplashPageState extends State<SplashPage> {
   }
 }
 
-/// ================= LOGIN PAGE =================
+/// ================= LOGIN =================
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<LoginPage> createState()=>_LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage>{
 
-  final emailCtrl = TextEditingController();
-  final passCtrl = TextEditingController();
-  bool loading = false;
+  final emailCtrl=TextEditingController();
+  final passCtrl=TextEditingController();
+  bool loading=false;
 
   @override
   Widget build(BuildContext context){
@@ -96,12 +95,12 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height:30),
 
               TextField(
-                controller: emailCtrl,
-                decoration: InputDecoration(
+                controller:emailCtrl,
+                decoration:InputDecoration(
                   labelText:"Email",
                   prefixIcon: const Icon(Icons.email),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                  border:OutlineInputBorder(
+                    borderRadius:BorderRadius.circular(10),
                   ),
                 ),
               ),
@@ -109,13 +108,13 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height:15),
 
               TextField(
-                controller: passCtrl,
+                controller:passCtrl,
                 obscureText:true,
-                decoration: InputDecoration(
+                decoration:InputDecoration(
                   labelText:"Password",
                   prefixIcon: const Icon(Icons.lock),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                  border:OutlineInputBorder(
+                    borderRadius:BorderRadius.circular(10),
                   ),
                 ),
               ),
@@ -125,10 +124,10 @@ class _LoginPageState extends State<LoginPage> {
               SizedBox(
                 width:double.infinity,
                 height:50,
-                child: ElevatedButton(
-                  onPressed: loading ? null : () async {
+                child:ElevatedButton(
+                  onPressed:loading?null:() async {
 
-                    if(emailCtrl.text.isEmpty || passCtrl.text.isEmpty){
+                    if(emailCtrl.text.isEmpty||passCtrl.text.isEmpty){
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content:Text("Enter email & password")),
                       );
@@ -138,10 +137,9 @@ class _LoginPageState extends State<LoginPage> {
                     setState(()=>loading=true);
 
                     try{
-
                       await api.login(
-                        email: emailCtrl.text.trim(),
-                        password: passCtrl.text.trim(),
+                        email:emailCtrl.text.trim(),
+                        password:passCtrl.text.trim(),
                       );
 
                       if(!mounted) return;
@@ -161,7 +159,7 @@ class _LoginPageState extends State<LoginPage> {
 
                     setState(()=>loading=false);
                   },
-                  child: loading
+                  child:loading
                       ? const CircularProgressIndicator(color:Colors.white)
                       : const Text("Login"),
                 ),
@@ -187,7 +185,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-/// ================= SIGNUP PAGE =================
+/// ================= SIGNUP =================
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
 
@@ -197,9 +195,9 @@ class SignupPage extends StatefulWidget {
 
 class _SignupPageState extends State<SignupPage>{
 
-  final userCtrl = TextEditingController();
-  final emailCtrl = TextEditingController();
-  final passCtrl = TextEditingController();
+  final userCtrl=TextEditingController();
+  final emailCtrl=TextEditingController();
+  final passCtrl=TextEditingController();
   bool loading=false;
 
   @override
@@ -259,8 +257,8 @@ class _SignupPageState extends State<SignupPage>{
               child:ElevatedButton(
                 onPressed:loading?null:() async {
 
-                  if(userCtrl.text.isEmpty ||
-                     emailCtrl.text.isEmpty ||
+                  if(userCtrl.text.isEmpty||
+                     emailCtrl.text.isEmpty||
                      passCtrl.text.isEmpty){
 
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -272,7 +270,6 @@ class _SignupPageState extends State<SignupPage>{
                   setState(()=>loading=true);
 
                   try{
-
                     await api.register(
                       username:userCtrl.text.trim(),
                       email:emailCtrl.text.trim(),
@@ -308,7 +305,7 @@ class _SignupPageState extends State<SignupPage>{
   }
 }
 
-/// ================= SOIL INPUT PAGE =================
+/// ================= SOIL INPUT =================
 class SoilInputPage extends StatefulWidget {
   const SoilInputPage({super.key});
 
@@ -324,6 +321,8 @@ class _SoilInputPageState extends State<SoilInputPage>{
   final tCtrl=TextEditingController();
   final hCtrl=TextEditingController();
   final phCtrl=TextEditingController();
+
+  String selectedSeason="Kharif";   // ✅ FIXED
 
   bool loading=false;
 
@@ -395,6 +394,28 @@ class _SoilInputPageState extends State<SoilInputPage>{
             soilField("Humidity (%)",hCtrl),
             soilField("pH",phCtrl),
 
+            /// ✅ CORRECT SEASONS
+            DropdownButtonFormField<String>(
+              value:selectedSeason,
+              decoration:InputDecoration(
+                labelText:"Season",
+                filled:true,
+                fillColor:Colors.white,
+                border:OutlineInputBorder(
+                  borderRadius:BorderRadius.circular(10),
+                ),
+              ),
+              items:["Kharif","Rabi","Annual"]
+                  .map((s)=>DropdownMenuItem(
+                        value:s,
+                        child:Text(s),
+                      ))
+                  .toList(),
+              onChanged:(v){
+                setState(()=>selectedSeason=v!);
+              },
+            ),
+
             const SizedBox(height:25),
 
             SizedBox(
@@ -427,6 +448,7 @@ class _SoilInputPageState extends State<SoilInputPage>{
                       temperature:double.parse(tCtrl.text),
                       humidity:double.parse(hCtrl.text),
                       ph:double.parse(phCtrl.text),
+                      season:selectedSeason,
                     );
 
                     if(!mounted) return;
@@ -459,37 +481,37 @@ class _SoilInputPageState extends State<SoilInputPage>{
   }
 }
 
-/// ================= RESULT PAGE =================
-class ResultPage extends StatelessWidget{
+/// ================= RESULT =================
+class ResultPage extends StatelessWidget {
 
   final List<CropRecommendation> results;
 
-  const ResultPage({super.key,required this.results});
+  const ResultPage({super.key, required this.results});
 
   @override
   Widget build(BuildContext context){
 
     return Scaffold(
-      backgroundColor:Colors.green[50],
-      appBar:AppBar(title:const Text("Recommendation Result")),
-      body:ListView.builder(
-        padding:const EdgeInsets.all(16),
-        itemCount:results.length,
-        itemBuilder:(context,index){
+      backgroundColor: Colors.green[50],
+      appBar: AppBar(title: const Text("Recommendation Result")),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: results.length,
+        itemBuilder: (context,index){
 
-          final r=results[index];
+          final r = results[index];
 
           return Card(
-            margin:const EdgeInsets.only(bottom:16),
-            child:Padding(
-              padding:const EdgeInsets.all(16),
-              child:Column(
-                crossAxisAlignment:CrossAxisAlignment.start,
-                children:[
+            margin: const EdgeInsets.only(bottom:16),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
 
                   Text(
                     r.crop,
-                    style:const TextStyle(
+                    style: const TextStyle(
                       fontSize:20,
                       fontWeight:FontWeight.bold,
                       color:Colors.green,
@@ -515,3 +537,4 @@ class ResultPage extends StatelessWidget{
       ),
     );
   }
+}

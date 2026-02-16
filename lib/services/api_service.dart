@@ -16,9 +16,10 @@ class CropRecommendation {
 
   factory CropRecommendation.fromJson(Map<String, dynamic> json) {
     return CropRecommendation(
-      crop: json["crop"],
-      deficiency: Map<String, dynamic>.from(json["deficiency"]),
-      fertilizers: List<String>.from(json["fertilizer_recommendation"]),
+      crop: json["crop"] ?? "",
+      deficiency: Map<String, dynamic>.from(json["deficiency"] ?? {}),
+      fertilizers:
+          List<String>.from(json["fertilizer_recommendation"] ?? []),
     );
   }
 }
@@ -26,8 +27,8 @@ class CropRecommendation {
 /// ================= API SERVICE =================
 class ApiService {
 
-  /// ✔ Chrome/Web → keep 127.0.0.1
-  /// ✔ Android Emulator → use 10.0.2.2
+  /// ✔ Chrome/Web → keep this
+  /// ✔ Android Emulator → change to 10.0.2.2
   final String baseUrl = "http://127.0.0.1:8000";
 
   /// ---------- SAVE LOGIN ----------
@@ -52,7 +53,7 @@ class ApiService {
   /// ---------- CHECK LOGIN ----------
   Future<bool> isLoggedIn() async {
     final token = await getToken();
-    return token != null;
+    return token != null && token.isNotEmpty;
   }
 
   /// ---------- LOGOUT ----------
@@ -84,7 +85,6 @@ class ApiService {
   }
 
   /// ================= LOGIN =================
-  /// RETURNS userId for navigation
   Future<int> login({
     required String email,
     required String password,
@@ -106,7 +106,6 @@ class ApiService {
       final String token = data["token"];
       final int userId = data["user"]["id"];
 
-      /// SAVE locally
       await _saveLogin(token, userId);
 
       return userId;
@@ -116,7 +115,7 @@ class ApiService {
     }
   }
 
-  /// ================= PREDICT =================
+  /// ================= PREDICT (SEASON ENABLED) =================
   Future<List<CropRecommendation>> predictCrop({
     required double n,
     required double p,
@@ -124,11 +123,12 @@ class ApiService {
     required double temperature,
     required double humidity,
     required double ph,
+    required String season,
   }) async {
 
     final token = await getToken();
 
-    if (token == null) {
+    if (token == null || token.isEmpty) {
       throw Exception("User not logged in");
     }
 
@@ -145,20 +145,25 @@ class ApiService {
         "Temperature": temperature,
         "Humidity": humidity,
         "pH": ph,
+        "Season": season,   // 🔥 IMPORTANT
       }),
     );
 
     if (response.statusCode == 200) {
 
       final data = jsonDecode(response.body);
-      final List list = data["recommendations"];
+
+      final List list = data["recommendations"] ?? [];
 
       return list
           .map((e) => CropRecommendation.fromJson(e))
           .toList();
 
     } else {
-      throw Exception("Prediction failed: ${response.body}");
+
+      // helpful backend error message
+      final msg = jsonDecode(response.body);
+      throw Exception("Prediction failed: ${msg["detail"] ?? response.body}");
     }
   }
 
@@ -167,7 +172,7 @@ class ApiService {
 
     final token = await getToken();
 
-    if (token == null) {
+    if (token == null || token.isEmpty) {
       throw Exception("User not logged in");
     }
 
