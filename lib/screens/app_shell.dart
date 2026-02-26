@@ -28,7 +28,7 @@ class _AppShellState extends State<AppShell> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => setState(() => index = 1),
         backgroundColor: Colors.orange.shade600,
-        child: const Icon(Icons.analytics),
+        child: const Icon(Icons.add),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: SizedBox(
