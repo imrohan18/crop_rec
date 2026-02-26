@@ -27,42 +27,48 @@ class CropRecommendation {
 /// ================= API SERVICE =================
 class ApiService {
 
-  /// ✔ Chrome/Web → keep this
-  /// ✔ Android Emulator → change to 10.0.2.2
   final String baseUrl = "http://127.0.0.1:8000";
 
-  /// ---------- SAVE LOGIN ----------
   Future<void> _saveLogin(String token, int userId) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString("token", token);
     await prefs.setInt("userId", userId);
   }
 
-  /// ---------- GET TOKEN ----------
+  Future<void> setGuest(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool("guest", value);
+  }
+
+  Future<bool> isGuest() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool("guest") ?? false;
+  }
+
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString("token");
   }
 
-  /// ---------- GET USER ID ----------
   Future<int?> getUserId() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt("userId");
   }
 
-  /// ---------- CHECK LOGIN ----------
   Future<bool> isLoggedIn() async {
+    final guest = await isGuest();
+    if (guest) return true;
     final token = await getToken();
     return token != null && token.isNotEmpty;
   }
 
-  /// ---------- LOGOUT ----------
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    await prefs.remove("token");
+    await prefs.remove("userId");
+    await prefs.remove("guest");
   }
 
-  /// ================= REGISTER =================
   Future<void> register({
     required String username,
     required String email,
@@ -84,7 +90,6 @@ class ApiService {
     }
   }
 
-  /// ================= LOGIN =================
   Future<int> login({
     required String email,
     required String password,
@@ -115,7 +120,6 @@ class ApiService {
     }
   }
 
-  /// ================= PREDICT (SEASON ENABLED) =================
   Future<List<CropRecommendation>> predictCrop({
     required double n,
     required double p,
@@ -126,18 +130,18 @@ class ApiService {
     required String season,
   }) async {
 
+    final guest = await isGuest();
     final token = await getToken();
-
-    if (token == null || token.isEmpty) {
-      throw Exception("User not logged in");
-    }
 
     final response = await http.post(
       Uri.parse("$baseUrl/predict"),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
+      headers: () {
+        final h = {"Content-Type": "application/json"};
+        if (!guest && token != null && token.isNotEmpty) {
+          h["Authorization"] = "Bearer $token";
+        }
+        return h;
+      }(),
       body: jsonEncode({
         "N": n,
         "P": p,
@@ -145,7 +149,7 @@ class ApiService {
         "Temperature": temperature,
         "Humidity": humidity,
         "pH": ph,
-        "Season": season,   // 🔥 IMPORTANT
+        "Season": season,
       }),
     );
 
@@ -167,14 +171,12 @@ class ApiService {
     }
   }
 
-  /// ================= HISTORY =================
   Future<List<dynamic>> getHistory() async {
 
+    final guest = await isGuest();
+    if (guest) return [];
     final token = await getToken();
-
-    if (token == null || token.isEmpty) {
-      throw Exception("User not logged in");
-    }
+    if (token == null || token.isEmpty) return [];
 
     final response = await http.get(
       Uri.parse("$baseUrl/history"),

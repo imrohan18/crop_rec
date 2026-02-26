@@ -30,18 +30,15 @@ def create_token(user_id: int):
 
 def get_current_user_id(authorization: str | None = Header(default=None)):
     if authorization is None:
-        raise HTTPException(status_code=401, detail="Authorization header missing")
-
+        return 0
     if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Invalid authorization format")
-
+        return 0
     token = authorization.replace("Bearer ", "")
-
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return int(payload.get("sub"))
     except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        return 0
 
 
 def hash_password(password: str) -> str:
@@ -231,17 +228,17 @@ def predict_crop(
             "fertilizer_recommendation":[]
         })
 
-    history = PredictionHistory(
-        user_id=user_id,
-        N=data.N,P=data.P,K=data.K,
-        Temperature=data.Temperature,
-        Humidity=data.Humidity,
-        pH=data.pH,
-        result=json.dumps(results)
-    )
-
-    db.add(history)
-    db.commit()
+    if user_id != 0:
+        history = PredictionHistory(
+            user_id=user_id,
+            N=data.N,P=data.P,K=data.K,
+            Temperature=data.Temperature,
+            Humidity=data.Humidity,
+            pH=data.pH,
+            result=json.dumps(results)
+        )
+        db.add(history)
+        db.commit()
 
     return {"recommendations":results}
 
@@ -253,13 +250,14 @@ def get_history(
     user_id: int = Depends(get_current_user_id)
 ):
 
+    if user_id == 0:
+        return []
     records = (
         db.query(PredictionHistory)
         .filter(PredictionHistory.user_id==user_id)
         .order_by(PredictionHistory.id.desc())
         .all()
     )
-
     return [{
         "N":r.N,"P":r.P,"K":r.K,
         "Temperature":r.Temperature,
