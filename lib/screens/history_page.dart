@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'services/api_service.dart';
+import '../services/api_service.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -10,7 +10,6 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
-
   final api = ApiService();
   List history = [];
   bool loading = true;
@@ -23,19 +22,19 @@ class _HistoryPageState extends State<HistoryPage> {
 
   void load() async {
     try {
-      final data = await api.getHistory();   // ✅ REMOVED userId
+      final data = await api.getHistory();
       setState(() => history = data);
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
       );
     }
-    setState(() => loading = false);
+    if (mounted) setState(() => loading = false);
   }
 
   @override
-  Widget build(BuildContext context){
-
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Prediction History")),
       body: loading
@@ -45,54 +44,42 @@ class _HistoryPageState extends State<HistoryPage> {
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: history.length,
-                  itemBuilder: (_, i){
-
+                  itemBuilder: (_, i) {
                     final h = history[i];
-
-                    // result stored as JSON string → decode if needed
                     final result = h["result"] is String
                         ? apiDecode(h["result"])
                         : h["result"];
-
                     return Card(
-                      margin: const EdgeInsets.only(bottom:12),
+                      margin: const EdgeInsets.only(bottom: 12),
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-
                             Text(
                               "N:${h["N"]}  P:${h["P"]}  K:${h["K"]}",
                               style: const TextStyle(fontWeight: FontWeight.bold),
                             ),
-
-                            const SizedBox(height:6),
-
+                            const SizedBox(height: 6),
                             Text("Temp: ${h["Temperature"]}"),
                             Text("Humidity: ${h["Humidity"]}"),
                             Text("pH: ${h["pH"]}"),
-
                             const Divider(),
-
                             const Text("Result:"),
-
-                            ...((result as List)
-                                .map((r)=>Text("• ${r["crop"]}")))
-
+                            ...((result as List).map((r) => Text("• ${r["crop"]}")))
                           ],
                         ),
                       ),
                     );
-                  }),
+                  },
+                ),
     );
   }
 
-  // helper for decoding JSON safely
-  dynamic apiDecode(String s){
-    try{
+  dynamic apiDecode(String s) {
+    try {
       return jsonDecode(s);
-    }catch(_){
+    } catch (_) {
       return [];
     }
   }
